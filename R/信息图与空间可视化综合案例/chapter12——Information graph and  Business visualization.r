@@ -173,7 +173,7 @@ library("dplyr")
 library("magrittr")
 
 ECOdata <- read.xlsx(
-  "D:/R/File/ECOCircle.xlsx",
+  "F:/R/信息图与空间可视化综合案例/ECOCircle.xlsx",
   sheetName="Sheet1",
   header=T,
   encoding="UTF-8",
@@ -303,7 +303,7 @@ ggplot()+
 #事件圆环图——汇总版
 
 font_add("myfont","msyhl.ttc")
-CairoPNG(file="C:/Users/RAINDU/Desktop/ECOCircle.png",width=1000,height=1050)
+CairoPNG(file="F:/ECOCircle.png",width=1000,height=1050)
 showtext_begin()
 ggplot()+
   geom_bar(data=mydata[mydata$Type=="A",],aes(x=ID,y=Scale),stat="identity",width=1,fill="#ECEDD1",col="#ECEDD1")+
@@ -354,7 +354,7 @@ library("shinydashboard")
 
 #导入数据
 newdata<-read.csv(
-  "D:/R/File/President.csv",
+  "F:/R/信息图与空间可视化综合案例/President.csv",
   stringsAsFactors=FALSE,
   check.names=FALSE
 ) 
