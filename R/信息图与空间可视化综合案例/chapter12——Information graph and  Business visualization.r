@@ -28,7 +28,7 @@ library("showtext")
 library("grid")
 library("Cairo")
 
-mytable <- read.csv("F:/R/信息图与空间可视化综合案例/beijingtianqi.csv",stringsAsFactors=FALSE,check.names=FALSE) 
+mytable <- read.csv("F:/WorkPlace/R/R/信息图与空间可视化综合案例/beijingtianqi.csv",stringsAsFactors=FALSE,check.names=FALSE) 
 
 #作图数据准备
 mydata11  <- mytable %>% 
@@ -173,7 +173,7 @@ library("dplyr")
 library("magrittr")
 
 ECOdata <- read.xlsx(
-  "F:/R/信息图与空间可视化综合案例/ECOCircle.xlsx",
+  "F:/WorkPlace/R/R/信息图与空间可视化综合案例/ECOCircle.xlsx",
   sheetName="Sheet1",
   header=T,
   encoding="UTF-8",
