@@ -183,39 +183,41 @@ ECOdata <- read.xlsx(
 #2.2 使用循环构造作图数据：
 
 transfun <- function(data){
-  f <- c(99,91,84,77)
+  f <- c(99,91,84,77) #散点图的距离
   for (i in 1:nrow(data)){
-    m <- sum(data[i,3:6] == 1)
-    h <- grep(1,data[i,3:6])
-    data[i,h+2]<- f[1:m]
+    m <- sum(data[i,3:6] == 1) # 找出选举的4列里是1的相加
+    h <- grep(1,data[i,3:6]) # 找出选举的4列里是1的
+    data[i,h+2]<- f[1:m] # 把是1的按次序替换为f的值
   }
   return(data)
 }
 
-ECOdata <- transfun(ECOdata)
+ECOdata <- transfun(ECOdata) # 调用函数替换全局的1
 
 #2.3 
+# 生成2014年每一天的日期
 dateseries <- data.frame(
   newdate = seq(from=as.Date("2014-01-01"),to=as.Date("2014-12-31"),by="1 day")
 )
 
 mydata <-dateseries %>% mutate(
-  newmonth = newdate %>% month(),
-  ID       = 1:nrow(dateseries),
-  Type     = ifelse(newmonth%%2 == 0,"A","B"),
+  newmonth = newdate %>% month(), # 提取月份
+  ID       = 1:nrow(dateseries), # ID 为国家名排序
+  Type     = ifelse(newmonth%%2 == 0,"A","B"), # 划分单双月（A双月）
   Scale    = 100,
   Circle   = c(seq(from=90,to=-90,length=181),seq(from=90,to=-90,length=184))
 )
 
-
+# 拼接两个表
 mynewdata <- merge(
   mydata,
   ECOdata,
   by.x="newdate",
   by.y="date",
-  all.x= T
+  all.x= T # 保留左表的内容
 )
 
+# 转换为宽表格
 mynewdataone <- melt(
   na.omit(mynewdata), 
   id.vars =names(mynewdata)[1:7],
@@ -296,14 +298,14 @@ ggplot()+
   scale_x_continuous(expand = c(0,0))+
   scale_fill_manual(limits=c("Legislative","Referendum","President","Primary"),values=c("#93A299","#CF543F","#B5AE53","#86825B"),labels=c("立法","公投","总统","初选"))+
   guides(colour=guide_legend(title=NULL))+
-  coord_polar(theta="x")+
+  coord_polar(theta="x")+  # 坐标转换
   theme_void() 
 
 
 #事件圆环图——汇总版
 
 font_add("myfont","msyhl.ttc")
-CairoPNG(file="F:/ECOCircle.png",width=1000,height=1050)
+CairoPNG(file="F:/ECOCircle.png",width=1000,height=1050) # 图片保存路径
 showtext_begin()
 ggplot()+
   geom_bar(data=mydata[mydata$Type=="A",],aes(x=ID,y=Scale),stat="identity",width=1,fill="#ECEDD1",col="#ECEDD1")+
@@ -424,6 +426,8 @@ ggplot(American_data,aes(long,lat,group=group,fill=Clinton_q))+
 #4 共和党（特朗普）各州选票支持率统计：
 
 qb <- quantile(na.omit(American_data$Trump),c(0,0.2,0.4,0.6,0.8,1.0))
+
+# 数据分箱
 American_data$Trump_q <- cut(
   American_data$Trump,
   qb,
