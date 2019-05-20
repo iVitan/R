@@ -15,7 +15,8 @@ library("grid")
 library("xlsx")
 library("showtext")
 library("magrittr")
-font_add("myfont", "msyh.ttc")
+#font_add("myfont", "msyh.ttc")
+font.add('SimSun', regular = 'C:/Windows/Fonts/Microsoft/SimSun.ttf')
 
 ####一、数据处理阶段####
 
@@ -47,11 +48,11 @@ shandong_district_data <- read.csv(
 ######################################################################################
 
 #以下导入山东省各县级行政单位的预算数据：
-shandong_zhibiao_data <- read.xlsx(
-  "G:/WorkPlace/R/R/Rstudy/shandong/shddata.xlsx",
-  sheetName="Shandongdata",
+shandong_zhibiao_data <- read.csv(
+  "G:/WorkPlace/R/R/Rstudy/shandong/shddata2.csv",
+  #sheetName="Shandongdata",
   header=T,
-  encoding='UTF-8',
+  #encoding='UTF-8',
   stringsAsFactors=FALSE
   ) 
 
@@ -177,7 +178,7 @@ shandong_city_map_data <- shandong_city_map_data %>%
       ) 
  )
 
-CairoPNG(file="GDPScale.png",width=1200,height=640)
+CairoPNG(file="GDPScale222.png",width=1200,height=640)
 showtext_begin()
 ggplot()+
   geom_polygon(data=shandong_city_map_data,aes(x=long,y=lat,group=group,fill=FA_SUM_GDPScale),col="white",size=.2)+

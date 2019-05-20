@@ -52,7 +52,7 @@ gc()
 ###shapefile文件导入
 
 #maptools包导入：
-china_map1 <- readShapePoly("G:\R\第九章\CHN_adm\bou2_4p.shp") #导入CHN_adm文件下的bou2_4p.shp文件
+china_map1 <- readShapePoly("G:\R\Rstudy\CHN_adm\bou2_4p.shp") #导入CHN_adm文件下的bou2_4p.shp文件
 division_data <- china_map1@data %>% mutate(id = row.names(.)) %>% .[,c("id","NAME")]    #行政区划层
 polygons_data <- fortify(china_map1)  %>% .[,c(1,2,7,3,6)]                              #地理信息边界点数据
 unique(polygons_data$id)
@@ -62,7 +62,7 @@ ggplot(polygons_data,aes(long,lat,group = group)) +
   geom_polygon(colour = 'white')
 
 #rgdal包导入:
-china_map2 <- readOGR("G:\R\第九章\CHN_adm\bou2_4p.shp",stringsAsFactors=FALSE)#导入CHN_adm文件下的bou2_4p.shp文件，要求不要自动将非数值型数据转换成有序因子
+china_map2 <- readOGR("G:\R\Rstudy\CHN_adm\bou2_4p.shp",stringsAsFactors=FALSE)#导入CHN_adm文件下的bou2_4p.shp文件，要求不要自动将非数值型数据转换成有序因子
 
 division_data <- china_map2@data %>% mutate(id = row.names(.)) %>% .[,c("id","NAME")]    #行政区划层：以行序号在china_map2中产生id列，并从中筛选出id与NAME两列数
 polygons_data <- fortify(china_map2)  %>% .[,c(1,2,7,3,6)]                               #地理信息边界点数据：利用ggplot2的fortify函数格式china.map2，并筛选出Polygons数据
