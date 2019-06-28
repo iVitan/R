@@ -1,0 +1,214 @@
+#清空系统内存
+rm(list = ls())
+gc()
+
+
+#加载包
+library("dplyr")
+library("ggplot2")
+library("stringr")
+library("lubridate")
+library("DT")
+library("ggplot2")
+library("reshape2")
+library("RColorBrewer")
+library("scales")
+library("showtext")
+library("grid")
+library("Cairo")
+
+# 读取数据
+mytable <- read.csv("G:/WorkPlace/商务分析报告/tianqi/shanghaiWeather.csv",stringsAsFactors=FALSE,check.names=FALSE) 
+
+#作图数据准备
+mytable$Year <- format(as.Date(mytable$date), "%Y")
+
+mydata11  <- mytable %>% 
+  select(date,AQI,Year)  %>% 
+  arrange(Year,date) %>% #按年、日期排序
+  filter(date!="2016-02-29")#为了保证每年数据天数一致删去2016-02-29
+
+mydata11$ID <- rep(seq(from=1,to=365),5) #每年按日期生成ID
+
+# 极坐标图每一年的半径
+mydata11$Asst <- 5
+mydata11$Asst[mydata11$Year == 2015] <- 10
+mydata11$Asst[mydata11$Year == 2016] <- 15
+mydata11$Asst[mydata11$Year == 2017] <- 20
+mydata11$Asst[mydata11$Year == 2018] <- 25
+
+#月份标签及其旋转角度
+mydata11$Month     <- month(mydata11$date)
+mydata11$Monthdata <- -5
+mydata11$Monthjo   <- ifelse(mydata11$Month %% 2==0,"A","B")#划分单双月
+
+circlemonth        <- seq(15,345,length=12) # 月份的旋转角度
+circlebj           <- rep(c(-circlemonth[1:3],rev(circlemonth[1:3])),2) # AQI的旋转角度
+circlelabel        <- paste0(1:12,"月") # 月份text
+
+#取月度数据子集
+mydata11A <- mydata11[mydata11$Year == 2014 & mydata11$Monthjo == "A",]
+mydata11B <- mydata11[mydata11$Year == 2014 & mydata11$Monthjo == "B",]
+
+#月份圆环图：
+ggplot()+
+  geom_bar(data=mydata11A,aes(x=ID,y=Monthdata),stat="identity",width=1,fill="#ECEDD1",col="#ECEDD1") +
+  geom_bar(data=mydata11B,aes(x=ID,y=Monthdata),stat="identity",width=1,fill="#DFE0B1",col="#DFE0B1") +
+  geom_text(data=NULL,aes(x= circlemonth ,y=-2.5,label = circlelabel,angle=circlebj),family="myfont",size=7,hjust=0.5,vjust=.5)+
+  scale_x_continuous(expand = c(0,0)) +
+  coord_polar(theta="x")+
+  ylim(-20,20)
+
+#取季度数据子集
+mydata11$Quarter     <- quarter(mydata11$date)#把数据划分为4分
+mydata11$Quarterdata <- 30 #增加一列值为35的Quarterdata列
+# 季度的数据
+mydata11C <- mydata11 %>% filter(mydata11$Year==2014) %>% filter(Quarter %in% c(1,3)) 
+# 季度的数据
+mydata11D <- mydata11 %>% filter(mydata11$Year==2014) %>% filter(Quarter %in% c(2,4)) 
+
+# 季度的柱子旋转度数和长度
+circlequarter<-seq(45,315,length=4)
+# 季度的文字旋转度数
+circleqd<-rep(c(-circlequarter[1],circlequarter[1]),2)
+
+#季度圆环图：
+ggplot()+
+  geom_bar(data=mydata11C,aes(x=ID,y=Quarterdata),stat="identity",width=1,fill="#BDBDBD",col="#BDBDBD")+
+  geom_bar(data=mydata11D,aes(x=ID,y=Quarterdata),stat="identity",width=1,fill="#D4D2D3",col="#D4D2D3")+
+  geom_text(data=NULL,aes(x=circlequarter,y=17.5,label=paste0(c("一","二","三","四"),"季度"),angle=circleqd),family="myfont",size=7,hjust=0.5,vjust=.5)+
+  scale_x_continuous(expand = c(0,0)) +
+  coord_polar(theta="x")+
+  ylim(-20,20)
+
+#空气质量AQI指标离散化（使用cut函数进行离散等距分箱）
+mydata11$FADD<-cut(
+  mydata11$AQI,
+  breaks=c(0,50,100,150,200,300,500),
+  labels=c("0~50","50~100","100~150","150~200","200~300","300~500"),
+  order= TRUE
+)
+
+#主图——天气圆环图：
+ggplot()+
+  geom_bar(data=mydata11[mydata11$Year==2018,],aes(x=ID,y=Asst,fill=FADD),stat="identity",width=1)+
+  geom_bar(data=mydata11[mydata11$Year==2017,],aes(x=ID,y=Asst,fill=FADD),stat="identity",width=1)+
+  geom_bar(data=mydata11[mydata11$Year==2016,],aes(x=ID,y=Asst,fill=FADD),stat="identity",width=1)+
+  geom_bar(data=mydata11[mydata11$Year==2015,],aes(x=ID,y=Asst,fill=FADD),stat="identity",width=1)+
+  geom_bar(data=mydata11[mydata11$Year==2014,],aes(x=ID,y=Asst,fill=FADD),stat="identity",width=1)+
+  scale_fill_brewer(palette="YlOrRd",direction=1,guide=guide_legend(reverse=TRUE))+
+  scale_x_continuous(expand = c(0,0)) +
+  coord_polar(theta="x")+
+  ylim(-20,20) +
+  guides(colour=guide_legend(reverse=TRUE))+
+  annotate("text",x=0,y=-15,label="上海",size=25,hjust=.5,vjust=1,family="myfont")
+
+#合成最终版图形：
+font_add("myfont","msyhl.ttc")
+CairoPNG(file="D:/PyCharm/workplace/tianqi/shanghai14018.png",width=1488,height=996)
+showtext.begin()
+
+ggplot()+
+  geom_bar(data=mydata11A,aes(x=ID,y=Monthdata),stat="identity",width=1,fill="#ECEDD1",col="#ECEDD1")+
+  geom_bar(data=mydata11B,aes(x=ID,y=Monthdata),stat="identity",width=1,fill="#DFE0B1",col="#DFE0B1")+
+  geom_bar(data=mydata11C,aes(x=ID,y=Quarterdata),stat="identity",width=1,fill="#BDBDBD",col="#BDBDBD")+
+  geom_bar(data=mydata11D,aes(x=ID,y=Quarterdata),stat="identity",width=1,fill="#D4D2D3",col="#D4D2D3")+
+  geom_bar(data=mydata11[mydata11$Year==2018,],aes(x=ID,y=Asst,fill=FADD),stat="identity",width=1)+
+  geom_bar(data=mydata11[mydata11$Year==2017,],aes(x=ID,y=Asst,fill=FADD),stat="identity",width=1)+
+  geom_bar(data=mydata11[mydata11$Year==2016,],aes(x=ID,y=Asst,fill=FADD),stat="identity",width=1)+
+  geom_bar(data=mydata11[mydata11$Year==2015,],aes(x=ID,y=Asst,fill=FADD),stat="identity",width=1)+
+  geom_bar(data=mydata11[mydata11$Year==2014,],aes(x=ID,y=Asst,fill=FADD),stat="identity",width=1)+
+  geom_text(data=NULL,aes(x=circlemonth,y=-2.5,label=paste0(1:12,"月"),angle=circlebj),family="myfont",size=7,hjust=0.5,vjust=.5)+
+  geom_text(data=NULL,aes(x=circlequarter,y=28,label=paste0(c("一","二","三","四"),"季度"),angle=circleqd),family="myfont",size=7,hjust=0.5,vjust=.5)+
+  scale_fill_brewer(palette="YlOrRd",type="seq",direction=1,guide=guide_legend(reverse=TRUE))+
+  scale_x_continuous(expand = c(0,0)) +
+  coord_polar(theta="x")+
+  ylim(-30,30) +
+  guides(colour=guide_legend(reverse=TRUE))+
+  annotate("text",x=0,y=-20,label="上海",size=25,hjust=.5,vjust=1,family="myfont") +    
+  labs(
+    title="2014~2018年度上海市空气质量水平可视化",
+    subtitle="数据根据AQI指标水平进行分段分割",
+    caption="Source：https://www.aqistudy.cn/",
+    x="",y="",fill=""
+  )+
+  theme_void() %+replace%
+  theme(
+    panel.border=element_blank(),
+    legend.key.size=unit(1.2,'cm'),
+    legend.key.height=unit(1,'cm'),
+    legend.text.align=1, 
+    legend.position=c(1,0),legend.justification=c(1,0),
+    legend.text=element_text(size=20,hjust=3,vjust=3,face="bold"),
+    plot.title=element_text(size=50,lineheight=1.5,family="myfont"),
+    plot.subtitle=element_text(size=35,lineheight=1.5,family="myfont"),
+    plot.caption=element_text(size=25,hjust=0,lineheight=1.2,family="myfont"),
+    plot.margin=unit(c(.5,.5,.5,.5),"lines")
+  )
+
+showtext_end()
+dev.off()
+
+
+
+#清空系统内存
+rm(list = ls())
+gc()
+library("ggplot2")
+library("Cairo")
+library("xlsx")
+library("lubridate")
+library("reshape2")
+library("showtext")
+library("grid")
+library("plyr")
+library("dplyr")
+library("magrittr")
+require("openair")
+data <- read.csv("G:/WorkPlace/商务分析报告/tianqi/shanghaiWeather.csv",stringsAsFactors=FALSE,check.names=FALSE) 
+data$date <- as.Date(data$date,'%Y-%m-%d')
+font_add("myfont","msyhl.ttc")
+CairoPNG(file="D:/PyCharm/workplace/tianqi/SummaryCQ.png",width=1488,height=996)
+showtext.begin()
+summaryPlot(data)
+showtext_end()
+dev.off()
+
+calendarPlot(data, pollutant = "PM2.5",year = year(data$date))
+
+# 污染等级频数及频率
+level_table = table(data[,3])
+level_ptable <- prop.table(table(data[,3]))
+
+
+#AQI指数的频数直方图
+
+
+#分年份AQI密度曲线
+date <- ymd(data[,1])
+year <- year(date)
+nianfen <- as.factor(year)
+ggplot(data,aes(x=AQI,colour=nianfen))+geom_freqpoly(aes(y=..density..),size=2)+theme_bw()
+
+#主要污染物的频数统计，以及分污染等级对主要污染物进行频数统计
+mp_table <- table(data[,9])
+level_mp_table <- table(data[,3],data[,9])
+
+
+# AQI 
+hist(data$AQI, main="AQI指数直方图示例",xlab = data$AQI, ylab="数值",col = "blue",border = "yellow")
+
+
+#AQI指数与各类污染物的矩阵散点图
+library("graphics")
+scatter <- plot(data[,c(2,4:9)],pch=20)
+plot(scatter)
+
+data$date <- as.Date(data$date,'%Y-%m-%d')
+#
+so2Output<-timeVariation(data,pollutant= "PM2.5",group = "year")
+
+#污染物之间的关系
+linearRelation(data,x="O3",y="NO2",period= "day")
+calendarPlot(data, pollutant = "PM2.5")
+
